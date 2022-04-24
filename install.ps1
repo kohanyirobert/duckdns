@@ -1,19 +1,13 @@
 param(
+  [string]$Name = "DuckDNS",
+  [string]$Path = "\",
   [string]$Domain,
   [string]$Token,
   [string]$InterfaceAlias,
-  [switch]$IPv4,
-  [switch]$IPv6,
   [switch]$Verbose
 )
 
-$name = 'DuckDNS'
-$path = '\'
-Unregister-ScheduledTask `
-  -TaskName $name `
-  -TaskPath $path `
-  -Confirm:$false `
-  -ErrorAction Ignore
+& .\uninstall.ps1 -Name $Name -Path $Path
 
 $triggers = @()
 $class = Get-cimclass MSFT_TaskEventTrigger root/Microsoft/Windows/TaskScheduler
@@ -54,14 +48,8 @@ $scriptArgs = @(
   "-Domain", $Domain,
   "-Token", $Token,
   "-InterfaceAlias", $InterfaceAlias,
-  "*>> $env:TEMP\$name.log"
+  "*>> $env:TEMP\$Name.log"
 )
-if ($IPv4) {
-  $scriptArgs += "-IPv4"
-}
-if ($IPv6) {
-  $scriptArgs += "-IPv6"
-}
 if ($Verbose) {
   $scriptArgs += "-Verbose"
 }
@@ -70,8 +58,8 @@ $action = New-ScheduledTaskAction `
   -Execute "pwsh.exe" `
   -Argument ($scriptArgs -Join " ")
 Register-ScheduledTask `
-  -TaskName $name `
-  -TaskPath $path `
+  -TaskName $Name `
+  -TaskPath $Path `
   -Action $action `
   -Trigger $triggers `
   -Principal $principal `

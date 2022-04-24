@@ -1,25 +1,32 @@
 # About
 
-Script to update dynamic IPv4 and/or IPv6 addresses at [DuckDNS](https://duckdns.org).
+Script to update/clear dynamic IPv4 and IPv6 addresses at [DuckDNS](https://duckdns.org).
 
-**Important**: the script assumes [PowerShell 7 (`pwsh.exe`)](https://aka.ms/pwsh) is available on the system.
+**Important**:
+
+1. Assumes [PowerShell 7 (`pwsh.exe`)](https://aka.ms/pwsh) is available on the system
+1. `install.ps1` and `uninstall.ps1` must be executed from elevated prompt
 
 ## Usage
 
-### Direct Execution
-
 ```pwsh
-.\main.ps1 -Domain "your-domain" -Token "your-token" -InterfaceAlias "your-interface-alias" -IPv6
+.\main.ps1 -Domain "your-domain" -Token "your-token" -InterfaceAlias "your-interface-alias"
 ```
 
 Use the `-Verbose` flag for a chattier output.
 
-### Scheduled Task
+## Scheduled Task
 
-Use `task.ps1` to create a scheduled task that runs on network changes, at logon and startup
+### Install
+
+Use `install.ps1` to create a scheduled task that runs on network changes, at logon and startup.
 
   ```pwsh
-  .\task.ps1 -Domain "your-domain" -Token "your-token" -InterfaceAlias "your-interface-alias" -IPv6
+  .\install.ps1 -Domain "your-domain" -Token "your-token" -InterfaceAlias "your-interface-alias"
   ```
 
-The task write logs to `$env:TEMP\DuckDNS.log`.
+The task write logs to `$env:TEMP\DuckDNS.log` by default.
+
+### Uninstall
+
+Use `uninstall.ps1` to remove the scheduled task.

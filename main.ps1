@@ -2,8 +2,7 @@ param(
   [string]$Domain,
   [string]$Token,
   [string]$InterfaceAlias,
-  [switch]$IPv4,
-  [switch]$IPv6,
+  [switch]$Clear,
   [switch]$Verbose
 )
 
@@ -23,28 +22,31 @@ function Get-ISODate() {
   return Get-Date -UFormat +%Y-%m-%dT%H:%M:%S
 }
 
-$uri = "https://www.duckdns.org/update?token=$Token&domains=$Domain"
+function Write-Log([string]$Message) {
+  Write-Output "$(Get-ISODate) - $Message"
+}
+
+$uri = "https://www.duckdns.org/update?token=$Token&domains=$Domain&ip="
+try {
+  $uri += "&ipv6=$(Get-IPv6Address $InterfaceAlias)"
+} catch {
+  $uri += "&ipv6="
+}
 if ($Verbose) {
   $uri += "&verbose=true"
 }
-if ($IPv4) {
-  $uri += "&ip="
-}
-if ($IPv6) {
-  $uri += "&ipv6=$(Get-IPv6Address $InterfaceAlias)"
-}
-if (-not $IPv4 -and -not $IPv6) {
+if ($Clear) {
   $uri += "&clear=true"
 }
 $response = Invoke-WebRequest $uri
 if ($Verbose) {
-  Write-Output "$(Get-ISODate) - START"
-  Write-Output "REQUEST"
-  Write-Output $response.BaseResponse.RequestMessage.ToString()
-  Write-Output "RESPONSE"
-  Write-Output $response.RawContent
-  Write-Output "$(Get-ISODate) - END"
+  Write-Log "START"
+  Write-Log "REQUEST"
+  Write-Log $response.BaseResponse.RequestMessage
+  Write-Log "RESPONSE"
+  Write-Log $response.RawContent
+  Write-Log "END"
 }
 else {
-  Write-Output "$(Get-ISODate) - $(($response.RawContent -split "`r?`n")[-1]) - $uri"
+  Write-Log "$(($response.RawContent -split "`r?`n")[-1]) - $uri"
 }
