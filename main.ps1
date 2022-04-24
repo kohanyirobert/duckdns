@@ -3,7 +3,8 @@ param(
   [string]$Token,
   [string]$InterfaceAlias,
   [switch]$Clear,
-  [switch]$Verbose
+  [switch]$Verbose,
+  [TimeSpan]$Timeout = '00:00:03'
 )
 
 function Get-IPv6Address([string]$InterfaceAlias) {
@@ -38,7 +39,7 @@ if ($Verbose) {
 if ($Clear) {
   $uri += "&clear=true"
 }
-$response = Invoke-WebRequest $uri
+$response = Invoke-WebRequest -TimeoutSec $Timeout.Seconds $uri
 if ($Verbose) {
   Write-Log "START"
   Write-Log "REQUEST"
