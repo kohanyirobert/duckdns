@@ -1,7 +1,6 @@
 param(
   [string]$Domain,
   [string]$Token,
-  [string]$InterfaceAlias,
   [switch]$Clear,
   [switch]$Verbose,
   [TimeSpan]$RequestTimeout = '00:00:03'
