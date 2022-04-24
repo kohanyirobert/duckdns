@@ -27,6 +27,16 @@ $networkChangeTrigger.Subscription = '<QueryList>
 	</Query>
 </QueryList>'
 $triggers += $networkChangeTrigger
+$resumeFromSleepTrigger = $class | New-CimInstance -ClientOnly
+$resumeFromSleepTrigger.Enabled = $true
+$resumeFromSleepTrigger.Subscription = '<QueryList>
+  <Query Id="0" Path="System">
+    <Select Path="System">
+      *[System[EventID=107]]
+    </Select>
+  </Query>
+</QueryList>'
+$triggers += $resumeFromSleepTrigger
 $triggers += (New-ScheduledTaskTrigger -AtStartup)
 $triggers += (New-ScheduledTaskTrigger -AtLogon)
 
