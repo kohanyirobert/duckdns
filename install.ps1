@@ -4,7 +4,8 @@ param(
   [string]$Domain,
   [string]$Token,
   [string]$InterfaceAlias,
-  [switch]$Verbose
+  [switch]$Verbose,
+  [TimeSpan]$Timeout = '00:00:03'
 )
 
 & .\uninstall.ps1 -Name $Name -Path $Path
@@ -34,8 +35,7 @@ $triggers += $resumeFromSleepTrigger
 $triggers += (New-ScheduledTaskTrigger -AtStartup)
 $triggers += (New-ScheduledTaskTrigger -AtLogon)
 
-$timeout = (New-TimeSpan -Seconds 3)
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -ExecutionTimeLimit $timeout
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -ExecutionTimeLimit $Timeout
 $principal = New-ScheduledTaskPrincipal -UserId $(whoami) -LogonType S4U
 
 $scriptArgs = @(
