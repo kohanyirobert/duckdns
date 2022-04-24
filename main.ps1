@@ -4,8 +4,21 @@ param(
   [string]$InterfaceAlias,
   [switch]$Clear,
   [switch]$Verbose,
-  [TimeSpan]$Timeout = '00:00:03'
+  [TimeSpan]$RequestTimeout = '00:00:03'
 )
+
+function Get-ActiveInterfaceAlias() {
+    $aliases = @(Get-NetAdapter -Physical | Where-Object {$_.Status -eq "Up"} | ForEach-Object {$_.InterfaceAlias})
+    if ($aliases) {
+      if ($aliases.Count -eq 1) {
+        return $aliases[0]
+      } else {
+        throw "Found more than one active physical network adapters: $($aliases -join ', ')"
+      }
+    } else {
+      throw "No active physical network adapter found"
+    }
+}
 
 function Get-IPv6Address([string]$InterfaceAlias) {
   return (
@@ -29,7 +42,9 @@ function Write-Log([string]$Message) {
 
 $uri = "https://www.duckdns.org/update?token=$Token&domains=$Domain&ip="
 try {
-  $uri += "&ipv6=$(Get-IPv6Address $InterfaceAlias)"
+  $alias = Get-ActiveInterfaceAlias
+  $ipv6 = Get-IPv6Address $alias
+  $uri += "&ipv6=$ipv6"
 } catch {
   $uri += "&ipv6="
 }
@@ -39,7 +54,7 @@ if ($Verbose) {
 if ($Clear) {
   $uri += "&clear=true"
 }
-$response = Invoke-WebRequest -TimeoutSec $Timeout.Seconds $uri
+$response = Invoke-WebRequest -TimeoutSec $RequestTimeout.Seconds $uri
 if ($Verbose) {
   Write-Log "START"
   Write-Log "REQUEST"

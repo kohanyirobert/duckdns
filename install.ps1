@@ -3,9 +3,8 @@ param(
   [string]$Path = "\",
   [string]$Domain,
   [string]$Token,
-  [string]$InterfaceAlias,
   [switch]$Verbose,
-  [TimeSpan]$Timeout = '00:00:03'
+  [TimeSpan]$TaskTimeout = '00:00:30'
 )
 
 & .\uninstall.ps1 -Name $Name -Path $Path
@@ -35,7 +34,7 @@ $triggers += $resumeFromSleepTrigger
 $triggers += (New-ScheduledTaskTrigger -AtStartup)
 $triggers += (New-ScheduledTaskTrigger -AtLogon)
 
-$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -ExecutionTimeLimit $Timeout
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -ExecutionTimeLimit $TaskTimeout
 $principal = New-ScheduledTaskPrincipal -UserId $(whoami) -LogonType S4U
 
 $scriptArgs = @(
@@ -47,7 +46,6 @@ $scriptArgs = @(
   "-Command", ".\main.ps1",
   "-Domain", $Domain,
   "-Token", $Token,
-  "-InterfaceAlias", $InterfaceAlias,
   "*>> $env:TEMP\$Name.log"
 )
 if ($Verbose) {
@@ -55,7 +53,7 @@ if ($Verbose) {
 }
 $action = New-ScheduledTaskAction `
   -WorkingDirectory $PWD `
-  -Execute "pwsh.exe" `
+  -Execute "powershell.exe" `
   -Argument ($scriptArgs -Join " ")
 Register-ScheduledTask `
   -TaskName $Name `
