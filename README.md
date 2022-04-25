@@ -7,10 +7,12 @@ Script to update/clear dynamic IPv4 and IPv6 addresses at [DuckDNS](https://duck
 ## Usage
 
 ```pwsh
-.\main.ps1 -Domain "your-domain" -Token "your-token"
+.\main.ps1 -Domain "your-domain" -Token "your-token" -Operation IPv6
 ```
 
-Use the `-Verbose` flag for a chattier output.
+- If the token is set in the `DUCKDNS_TOKEN` environment variable then `-Token` does not need to be set, otherwise it's mandatory
+- There are three operations: `IPv4`, `IPv6` and `Clear`
+- Use the `-Verbose` flag for a chattier output
 
 ## Scheduled Task
 
@@ -18,9 +20,9 @@ Use the `-Verbose` flag for a chattier output.
 
 Use `install.ps1` to create a scheduled task that runs on network changes, at logon and startup.
 
-  ```pwsh
-  .\install.ps1 -Domain "your-domain" -Token "your-token"
-  ```
+```pwsh
+.\install.ps1 -Domain "your-domain" -Token "your-token" -Operation IPv6
+```
 
 The task write logs to `$env:TEMP\DuckDNS.log` by default.
 

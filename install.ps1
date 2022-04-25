@@ -1,39 +1,56 @@
-#requires -Version 7.2
+#requires -Version 5.1
 #requires -RunAsAdministrator
+
+using namespace System.Collections.ObjectModel
+using namespace System.Management.Automation
 
 [CmdletBinding()]
 param(
-  [string]$Name = "DuckDNS",
-  [string]$Path = "\",
-  [Parameter(Mandatory)][string]$Domain,
-  [TimeSpan]$TaskTimeout = '00:00:30'
+  [string]
+  $Name = "DuckDNS",
+
+  [string]
+  $Path = "\",
+
+  [Parameter(Mandatory)]
+  [string]
+  $Domain,
+
+  [Parameter(Mandatory)]
+  [ValidateSet('IPv4', 'IPv6')]
+  [string]
+  $Operation,
+
+  [TimeSpan]
+  $TaskTimeout = '00:00:30'
 )
 
 dynamicparam {
   # Make -Token parameter mandatory if DUCKDNS_TOKEN environment variable is not defined and/or empty.
-  $tokenAttribute = New-Object System.Management.Automation.ParameterAttribute
-  $tokenAttribute.Mandatory = $env:DUCKDNS_TOKEN ? $false : $true
-  $attributeCollection = New-Object System.Collections.ObjectModel.Collection[Attribute]
+  $tokenAttribute = New-Object ParameterAttribute
+  $tokenAttribute.Mandatory = if ($env:DUCKDNS_TOKEN) { $false } else { $true }
+  $attributeCollection = New-Object Collection[Attribute]
   $attributeCollection.Add($tokenAttribute)
 
-  $tokenParam = New-Object System.Management.Automation.RuntimeDefinedParameter('Token', [Guid], $attributeCollection)
+  $tokenParam = New-Object RuntimeDefinedParameter('Token', [Guid], $attributeCollection)
 
-  $paramDictionary = New-Object System.Management.Automation.RuntimeDefinedParameterDictionary
-  $paramDictionary.Add('Token', $tokenParam)
+  $paramDictionary = New-Object RuntimeDefinedParameterDictionary
+  $paramDictionary['Token'] = $tokenParam
 
   return $paramDictionary
 }
 
 begin {
   $ErrorActionPreference = 'Stop'
-  $Token = $PSBoundParameters.Token ?? [Guid]::Parse($env:DUCKDNS_TOKEN)
+  $Token = if ($PSBoundParameters.Token) { $PSBoundParameters.Token } else { [Guid]::Parse($env:DUCKDNS_TOKEN) }
+  Write-Verbose "Token: $Token"
 }
 
 process {
   & .\uninstall.ps1 -Name $Name -Path $Path
 
   $triggers = @()
-  $class = Get-cimclass MSFT_TaskEventTrigger root/Microsoft/Windows/TaskScheduler
+  $class = Get-cimclass MSFT_TaskEventTrigger root/Microsoft/Windows/TaskScheduler -Verbose:$false
   $networkChangeTrigger = $class | New-CimInstance -ClientOnly
   $networkChangeTrigger.Enabled = $true
   $networkChangeTrigger.Subscription = '<QueryList>
@@ -69,11 +86,13 @@ process {
     "-Command", ".\main.ps1",
     "-Domain", $Domain,
     "-Token", $Token,
+    "-Operation", $Operation,
     "*>> $env:TEMP\$Name.log"
   )
   if ($VerbosePreference) {
     $scriptArgs += "-Verbose"
   }
+  Write-Verbose "ScriptArgs: $scriptArgs"
   $action = New-ScheduledTaskAction `
     -WorkingDirectory $PWD `
     -Execute "powershell.exe" `
